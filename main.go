@@ -4,21 +4,22 @@ import (
 	"auth/handle"
 	"auth/model"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
-	"github.com/gorilla/mux"
-	"html/template"
-	_ "github.com/lib/pq"
+	"os"
 	"path/filepath" // so that we can make path joins compatible on all OS
+
+	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 var tmpl = template.New("")
 
+
 func handler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf8")
-	// tmpl:= template.Must(template.ParseFiles("templates/index.html"))
-	// tmpl.Execute(w, nil)
-	//tmpl.ExecuteTemplate(w, "fstyle.css",nil)
 	err := tmpl.ExecuteTemplate(w, "index.html", nil)
 	if err != nil{
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -27,38 +28,39 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 
 func main() {
-	
-  	
-	_, err := tmpl.ParseGlob(filepath.Join(".", "templates", "*.html"))
+	err := godotenv.Load()
+	if err != nil{
+		log.Fatal("Error loading .env file")
+	}
+	port := os.Getenv("PORT")
+	  
+
+	_, err = tmpl.ParseGlob(filepath.Join(".", "templates", "*.html"))
 	if err != nil {
 		log.Fatalf("Unable to parse templates: %v\n", err)
 	}
-	// _, err = tmpl.ParseGlob(filepath.Join(".", "templates/css", "*.css"))
-	// if err != nil {
-	// 	log.Fatalf("Unable to parse templates: %v\n", err)
-	// }
 
 	fmt.Println(filepath.Join(".", "templates", "*.html"))
 	fmt.Println(filepath.Join(".", "templates", "*.css"))
 
 	fs:= http.FileServer(http.Dir("templates/"))
 	// Registering routes and handler that we will implement
-	//multi := http.NewServeMux() 
 	r := mux.NewRouter().StrictSlash(true)
 	r.HandleFunc("/signin", handle.Signin).Methods("POST")
 	r.HandleFunc("/signup", handle.Signup).Methods("POST")
 	r.HandleFunc("/", handler).Methods("GET")
+	r.HandleFunc("/dashboard", handle.Dashboard)
+	r.HandleFunc("/refresh", handle.Refresh)
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fs))
 	
-	//multi.Handle("/static/", http.StripPrefix("/static", fs))
-	// multi.HandleFunc("/", handler)
+
 	// initialize our database connection
-
-
 	db := model.InitDB()
 	defer db.Close()
-	// start the server on port 8000
-	fmt.Println("Listening and serving.....")
-	log.Fatal(http.ListenAndServe(":8000", r))
+	cacheDb := model.InitCache()
+	defer cacheDb.Close()
+	// start the server on port
+	fmt.Printf("Listening and serving on port %s.....", port)
+	log.Fatal(http.ListenAndServe(":"+port, r))
 }
 
