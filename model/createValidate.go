@@ -3,6 +3,7 @@ package model
 import (
 	"auth/views"
 	"fmt"
+	"log"
 	"net/http"
 )
 // CreateUser creates a new user
@@ -24,6 +25,7 @@ func GetUserCredential(username string) (*views.Credentials,error){
 	// Store the obtained password in `storedCreds`
 	err := result.Scan(&hashedCreds.Password)
 	if err != nil {
+		log.Println(err)
 		return nil,err
 	}
 	
