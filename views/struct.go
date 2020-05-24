@@ -6,6 +6,9 @@ type Credentials struct {
 	Password string `json:"password" db:"password"`
 }
 
-type Manny struct{
-
+type Signup struct{
+	Surname string
+	Firstname string
+	Username string
+	Password string
 }

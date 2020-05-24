@@ -1,7 +1,10 @@
 package model
 
-import "auth/views"
-
+import (
+	"auth/views"
+	"fmt"
+	"net/http"
+)
 // CreateUser creates a new user
 func CreateUser(user, password string) error{
 	// before creating user check if the user name exits
@@ -25,4 +28,25 @@ func GetUserCredential(username string) (*views.Credentials,error){
 	}
 	
 	return hashedCreds,nil
+}
+
+var users []views.Signup
+
+func NewUser(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost{
+		http.Error(w, "Must be a post request", http.StatusInternalServerError)
+		return
+	}
+	// we can check if correct data is sent here
+	// we can also do authentication here
+	fmt.Println("Writing user to db")
+	newuser := views.Signup{
+		Surname: r.FormValue("Surname"), 
+		Firstname: r.FormValue("Firstname"), 
+		Username: r.FormValue("Username"), 
+		Password: r.FormValue("password"),
+	}
+	users = append(users, newuser)
+	fmt.Println(newuser)
+	fmt.Fprintf(w, "New User added: %s\n", newuser.Username)
 }

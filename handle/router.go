@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"text/template"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -89,5 +90,10 @@ func Signin(w http.ResponseWriter, r *http.Request){
 
 	// If we reach this point, that means the users password was correct, and that they are authorized
 
+}
+
+func SignupPage(w http.ResponseWriter, r *http.Request) {
+	tmpl, _ :=template.ParseFiles("./templates/index.html")
+	tmpl.Execute(w, nil)
 }
 
